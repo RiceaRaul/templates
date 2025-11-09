@@ -8,7 +8,7 @@ spec:
     - web
   routes:
     - kind: Rule
-      match: Host(`pihole.home`)
+      match: Host(`pihole.inf.lan`)
       priority: 10
       middlewares:
         - name: redirect-root-to-admin
