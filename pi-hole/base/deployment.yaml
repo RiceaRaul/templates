@@ -24,6 +24,18 @@ spec:
           env:
             - name: TZ
               value: 'Europe/Bucharest'
+          readinessProbe:
+            httpGet:
+              path: /admin
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /admin
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 10
           ports:
             - containerPort: 80
               name: http
