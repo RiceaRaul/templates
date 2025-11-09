@@ -4,16 +4,12 @@ metadata:
   name: pihole
   namespace: pihole-namespace
   annotations:
-    argocd.argoproj.io/health: |
-      hs = {}
-      hs.status = "Healthy"
-      hs.message = "Service uses manual external IP"
-      return hs
+    argocd.argoproj.io/ignore-health: "true"
 spec:
   selector:
     app: pihole
   type: LoadBalancer
-  externalIPs: 
+  externalIPs:
     - 192.168.77.170
   ports:
     - name: http
