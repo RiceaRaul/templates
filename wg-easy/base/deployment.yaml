@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wg-easy
+  namespace: wg-easy-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wg-easy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wg-easy
+    spec:
+      containers:
+        - name: wg-easy
+          image: ghcr.io/wg-easy/wg-easy
+          env:
+            - name: DISABLE_IPV6
+              value: 'true'
+            - name: INSECURE
+              value: 'true'
+          ports:
+            - containerPort: 51820
+              name: wg
+              protocol: UDP
+            - containerPort: 51821
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wireguard
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_MODULE
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: wg-easy-storage-claim

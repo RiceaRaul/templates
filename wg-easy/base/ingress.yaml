@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wg-easy-ingressroute
+  namespace: wg-easy-namespace
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`wireguard.inf.lan`)
+      priority: 10
+      services:
+        - name: wg-easy-lb
+          port: 51821
