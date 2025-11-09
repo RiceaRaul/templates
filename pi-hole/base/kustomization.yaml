@@ -5,7 +5,6 @@ namespace: pihole-namespace
 
 resources:
   - namespace.yaml
-  - storage-class.yaml
   - pvcs.yaml
   - deployment.yaml
   - service.yaml
