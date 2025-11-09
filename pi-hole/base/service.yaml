@@ -3,6 +3,12 @@ kind: Service
 metadata:
   name: pihole
   namespace: pihole-namespace
+  annotations:
+    argocd.argoproj.io/health: |
+      hs = {}
+      hs.status = "Healthy"
+      hs.message = "Service uses manual external IP"
+      return hs
 spec:
   selector:
     app: pihole
