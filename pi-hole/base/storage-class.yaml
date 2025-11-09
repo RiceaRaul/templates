@@ -2,6 +2,6 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: pihole-storage
-provisioner: kubernetes.io/no-provisioner
+provisioner: rancher.io/local-path  # Change to your provisioner: longhorn, nfs-client, etc.
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Retain
