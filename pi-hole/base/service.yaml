@@ -21,3 +21,15 @@ spec:
       port: 53
       targetPort: 53
       protocol: TCP
+  readinessProbe:
+          httpGet:
+            path: /admin/index.php
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+  livenessProbe:
+    httpGet:
+      path: /admin/index.php
+      port: 80
+    initialDelaySeconds: 60
+    periodSeconds: 10
