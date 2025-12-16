@@ -24,6 +24,16 @@ spec:
       - name: proxmox-backend
         port: 8006
         weight: 1
+        scheme: https
+        serversTransport: proxmox-transport
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: proxmox-transport
+  namespace: proxmox-routing
+spec:
+  insecureSkipVerify: true  # Proxmox uses self-signed certificates
 ---
 apiVersion: v1
 kind: Service
