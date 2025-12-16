@@ -10,25 +10,36 @@ spec:
     - kind: Rule
       match: Host(`proxmox.inf.lan`)
       services:
-        - name: proxmox-service
-          port: 8006
+        - name: proxmox-svc
+          kind: TraefikService
+---
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService
+metadata:
+  name: proxmox-svc
+  namespace: proxmox-routing
+spec:
+  weighted:
+    services:
+      - name: proxmox-backend
+        port: 8006
+        weight: 1
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: proxmox-service
+  name: proxmox-backend
   namespace: proxmox-routing
 spec:
   clusterIP: None
   ports:
     - port: 8006
       targetPort: 8006
-      protocol: TCP
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: proxmox-service
+  name: proxmox-backend
   namespace: proxmox-routing
 subsets:
   - addresses:
