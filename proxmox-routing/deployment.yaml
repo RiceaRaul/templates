@@ -1,0 +1,37 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: proxmox-ingressroute
+  namespace: proxmox-routing
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`proxmox.inf.lan`)
+      priority: 10
+      services:
+        - name: proxmox-service
+          port: 8006
+          scheme: https
+          serversTransport: proxmox-transport
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: proxmox-transport
+  namespace: proxmox-routing
+spec:
+  insecureSkipVerify: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxmox-service
+  namespace: proxmox-routing
+spec:
+  type: ExternalName
+  externalName: proxmox.lan
+  ports:
+    - port: 8006
+      targetPort: 8006
