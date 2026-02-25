@@ -18,6 +18,8 @@ spec:
         env:
         - name: PANGOLIN_ENDPOINT
           value: "https://pangolin.ricearaul.com"
+        - name: NEWT_FIXED_SUBNETS
+          value: "192.168.77.0/24"
         - name: NEWT_ID
           valueFrom:
             secretKeyRef:
