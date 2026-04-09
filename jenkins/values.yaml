@@ -1,0 +1,52 @@
+replicaCount: 1
+
+image:
+  repository: jenkins/jenkins
+  tag: "2.504-lts"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+  agentPort: 50000
+
+ingressRoute:
+  enabled: false
+  entryPoints:
+    - websecure
+  hosts:
+    - jenkins.inf.lan
+  priority: 10
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 20Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+rbac:
+  create: true
+
+env: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
