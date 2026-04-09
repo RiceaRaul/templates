@@ -43,10 +43,14 @@ spec:
             - name: agent
               containerPort: 50000
               protocol: TCP
-          {{- with .Values.env }}
           env:
+            - name: CASC_JENKINS_CONFIG
+              value: /var/jenkins_home/casc_configs
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false"
+            {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /login
@@ -68,6 +72,26 @@ spec:
           volumeMounts:
             - name: jenkins-home
               mountPath: /var/jenkins_home
+            - name: casc-config
+              mountPath: /var/jenkins_home/casc_configs
+            - name: plugins
+              mountPath: /usr/share/jenkins/ref/plugins.txt
+              subPath: plugins.txt
+      initContainers:
+        - name: install-plugins
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - jenkins-plugin-cli
+            - --plugin-file
+            - /usr/share/jenkins/ref/plugins.txt
+            - --plugin-download-directory
+            - /var/jenkins_home/plugins
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            - name: plugins
+              mountPath: /usr/share/jenkins/ref/plugins.txt
+              subPath: plugins.txt
       volumes:
         - name: jenkins-home
           {{- if .Values.persistence.enabled }}
@@ -76,3 +100,9 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: casc-config
+          configMap:
+            name: {{ include "jenkins.fullname" . }}-casc
+        - name: plugins
+          configMap:
+            name: {{ include "jenkins.fullname" . }}-plugins

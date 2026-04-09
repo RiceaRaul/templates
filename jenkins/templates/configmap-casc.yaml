@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jenkins.fullname" . }}-casc
+  labels:
+    {{- include "jenkins.labels" . | nindent 4 }}
+data:
+  casc.yaml: |
+    jenkins:
+      numExecutors: {{ .Values.agent.numExecutors }}
+      clouds:
+        - kubernetes:
+            name: "kubernetes"
+            serverUrl: "https://kubernetes.default.svc.cluster.local"
+            jenkinsUrl: "http://{{ include "jenkins.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}"
+            jenkinsTunnel: "{{ include "jenkins.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.agentPort }}"
+            namespace: "{{ .Values.agent.namespace | default .Release.Namespace }}"
+            podLabels:
+              - key: "jenkins/agent"
+                value: "true"
+            containerCapStr: "{{ .Values.agent.containerCap }}"
+            templates:
+              - name: "default"
+                label: "kubernetes"
+                nodeUsageMode: NORMAL
+                containers:
+                  - name: "jnlp"
+                    image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+                    workingDir: "/home/jenkins/agent"
+                    resourceRequestCpu: "{{ .Values.agent.resources.requests.cpu }}"
+                    resourceRequestMemory: "{{ .Values.agent.resources.requests.memory }}"
+                    resourceLimitCpu: "{{ .Values.agent.resources.limits.cpu }}"
+                    resourceLimitMemory: "{{ .Values.agent.resources.limits.memory }}"
+                {{- range .Values.agent.podTemplates }}
+              - name: {{ .name | quote }}
+                label: {{ .label | quote }}
+                nodeUsageMode: NORMAL
+                containers:
+                  - name: "jnlp"
+                    image: {{ .image | quote }}
+                    workingDir: "/home/jenkins/agent"
+                    resourceRequestCpu: "{{ $.Values.agent.resources.requests.cpu }}"
+                    resourceRequestMemory: "{{ $.Values.agent.resources.requests.memory }}"
+                    resourceLimitCpu: "{{ $.Values.agent.resources.limits.cpu }}"
+                    resourceLimitMemory: "{{ $.Values.agent.resources.limits.memory }}"
+                {{- end }}
+    security:
+      gitHostKeyVerificationConfiguration:
+        sshHostKeyVerificationStrategy: "noHostKeyVerificationStrategy"

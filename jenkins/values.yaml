@@ -43,6 +43,32 @@ serviceAccount:
 rbac:
   create: true
 
+plugins:
+  - kubernetes
+  - workflow-aggregator
+  - configuration-as-code
+  - git
+  - pipeline-stage-view
+
+agent:
+  numExecutors: 0
+  namespace: ""
+  containerCap: 10
+  image:
+    repository: jenkins/inbound-agent
+    tag: "latest"
+  resources:
+    requests:
+      cpu: 256m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  podTemplates: []
+  # - name: "maven"
+  #   label: "maven"
+  #   image: "jenkins/inbound-agent:latest"
+
 env: []
 
 nodeSelector: {}
