@@ -9,12 +9,6 @@ Expand the name of the chart.
 {{- .Values.global.namespace }}
 {{- end }}
 
-{{- define "ollama-stack.ollama.labels" -}}
-app: ollama
-app.kubernetes.io/name: ollama
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
 {{- define "ollama-stack.webui.labels" -}}
 app: open-webui
 app.kubernetes.io/name: open-webui

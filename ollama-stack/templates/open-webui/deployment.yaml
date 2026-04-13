@@ -22,8 +22,6 @@ spec:
           ports:
             - containerPort: {{ .Values.openWebui.service.targetPort }}
           env:
-            - name: OLLAMA_BASE_URL
-              value: "http://ollama.{{ include "ollama-stack.namespace" . }}.svc.cluster.local:{{ .Values.ollama.service.port }}"
             - name: WEBUI_AUTH
               value: {{ .Values.openWebui.auth.enabled | quote }}
           volumeMounts:
