@@ -18,8 +18,9 @@ ollama:
       cpu: "4"
 
   env:
+    host: "0.0.0.0:11434"  # ascultă pe toate interfețele, nu doar 127.0.0.1
     keepAlive: "24h"
-    numParallel: "1"    # CPU-only: 1 request simultan pentru a evita OOM
+    numParallel: "1"        # CPU-only: 1 request simultan pentru a evita OOM
 
   persistence:
     size: 20Gi
