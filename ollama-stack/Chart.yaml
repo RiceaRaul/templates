@@ -1,0 +1,13 @@
+apiVersion: v2
+name: ollama-stack
+description: Ollama inference server + Open WebUI pentru Gemma 4
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - ollama
+  - llm
+  - open-webui
+  - gemma
+maintainers:
+  - name: Raul

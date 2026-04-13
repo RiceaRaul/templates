@@ -1,0 +1,50 @@
+global:
+  namespace: llm
+
+ollama:
+  image:
+    repository: ollama/ollama
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  model: "gemma4:e2b"   # 7.2GB — optim pentru CPU. Alternativă: gemma4:e4b (9.6GB)
+
+  resources:
+    requests:
+      memory: "8Gi"
+      cpu: "2"
+    limits:
+      memory: "16Gi"
+      cpu: "4"
+
+  env:
+    keepAlive: "24h"
+    numParallel: "1"    # CPU-only: 1 request simultan pentru a evita OOM
+
+  persistence:
+    size: 20Gi
+    storageClass: ""    # lasă gol pentru default StorageClass din cluster
+
+  service:
+    port: 11434
+
+openWebui:
+  image:
+    repository: ghcr.io/open-webui/open-webui
+    tag: main
+    pullPolicy: Always
+
+  auth:
+    enabled: true
+
+  persistence:
+    size: 2Gi
+    storageClass: ""
+
+  service:
+    port: 80
+    targetPort: 8080
+
+  ingress:
+    enabled: true
+    host: "chat.inf.lan"

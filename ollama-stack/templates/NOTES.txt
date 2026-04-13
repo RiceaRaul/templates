@@ -1,0 +1,15 @@
+Ollama Stack instalat cu succes!
+
+Ollama API:
+  http://ollama.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.ollama.service.port }}
+
+Open WebUI:
+  http://{{ .Values.openWebui.ingress.host }}
+
+Model configurat: {{ .Values.ollama.model }}
+
+Verifică pull-ul modelului:
+  kubectl logs -n {{ .Values.global.namespace }} job/ollama-pull-{{ .Values.ollama.model | replace ":" "-" | replace "." "-" }} -f
+
+Verifică status Ollama:
+  kubectl exec -n {{ .Values.global.namespace }} deploy/ollama -- ollama list

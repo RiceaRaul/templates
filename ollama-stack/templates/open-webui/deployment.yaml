@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: {{ include "ollama-stack.namespace" . }}
+  labels:
+    {{- include "ollama-stack.webui.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-webui
+  template:
+    metadata:
+      labels:
+        {{- include "ollama-stack.webui.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: open-webui
+          image: "{{ .Values.openWebui.image.repository }}:{{ .Values.openWebui.image.tag }}"
+          imagePullPolicy: {{ .Values.openWebui.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.openWebui.service.targetPort }}
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama.{{ include "ollama-stack.namespace" . }}.svc.cluster.local:{{ .Values.ollama.service.port }}"
+            - name: WEBUI_AUTH
+              value: {{ .Values.openWebui.auth.enabled | quote }}
+          volumeMounts:
+            - name: webui-data
+              mountPath: /app/backend/data
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.openWebui.service.targetPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: webui-data
+          persistentVolumeClaim:
+            claimName: open-webui-data

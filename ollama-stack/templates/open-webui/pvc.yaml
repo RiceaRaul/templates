@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-webui-data
+  namespace: {{ include "ollama-stack.namespace" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.openWebui.persistence.size }}
+  {{- if .Values.openWebui.persistence.storageClass }}
+  storageClassName: {{ .Values.openWebui.persistence.storageClass }}
+  {{- end }}
