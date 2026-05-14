@@ -54,6 +54,9 @@ agent:
   numExecutors: 0
   namespace: ""
   containerCap: 10
+  serviceAccount:
+    create: true
+    name: jenkins-builder
   image:
     repository: jenkins/inbound-agent
     tag: "latest"
