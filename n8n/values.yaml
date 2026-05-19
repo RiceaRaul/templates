@@ -29,8 +29,16 @@ n8n:
 
   ingress:
     enabled: true
-    host: "n8n.inf.lan"
-    entryPoint: web
+    entryPoints:
+      - web
+    hosts:
+      - "n8n.inf.lan"
+      # - "n8n.ricearaul.com"
+    # Optional Traefik TLS
+    tls:
+      enabled: false
+      certResolver: ""
+      secretName: ""
 
   resources: {}
 

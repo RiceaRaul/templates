@@ -6,11 +6,22 @@ metadata:
   namespace: {{ include "n8n.namespace" . }}
 spec:
   entryPoints:
-    - {{ .Values.n8n.ingress.entryPoint }}
+    {{- range .Values.n8n.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
   routes:
-    - match: Host(`{{ .Values.n8n.ingress.host }}`)
+    - match: {{ range $i, $h := .Values.n8n.ingress.hosts }}{{ if $i }} || {{ end }}Host(`{{ $h }}`){{ end }}
       kind: Rule
       services:
         - name: n8n
           port: {{ .Values.n8n.service.port }}
+  {{- if .Values.n8n.ingress.tls.enabled }}
+  tls:
+    {{- if .Values.n8n.ingress.tls.secretName }}
+    secretName: {{ .Values.n8n.ingress.tls.secretName }}
+    {{- end }}
+    {{- if .Values.n8n.ingress.tls.certResolver }}
+    certResolver: {{ .Values.n8n.ingress.tls.certResolver }}
+    {{- end }}
+  {{- end }}
 {{- end }}
