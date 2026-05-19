@@ -30,6 +30,8 @@ spec:
               value: {{ .Values.n8n.protocol | quote }}
             - name: WEBHOOK_URL
               value: "{{ .Values.n8n.protocol }}://{{ .Values.n8n.host }}/"
+            - name: N8N_SECURE_COOKIE
+              value: {{ .Values.n8n.secureCookie | quote }}
             - name: GENERIC_TIMEZONE
               value: {{ .Values.n8n.timezone | quote }}
             - name: TZ

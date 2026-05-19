@@ -15,6 +15,9 @@ n8n:
   port: 5678
   timezone: Europe/Bucharest
 
+  # Disable secure cookie when serving over HTTP (LAN). Set true when TLS enabled.
+  secureCookie: false
+
   # Encryption key for credentials. Generate: openssl rand -hex 32
   # If empty, n8n will autogenerate on first boot (NOT recommended — back this up).
   encryptionKey: ""
