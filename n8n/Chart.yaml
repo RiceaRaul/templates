@@ -1,0 +1,12 @@
+apiVersion: v2
+name: n8n
+description: n8n workflow automation with external Postgres and Redis
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - n8n
+  - workflow
+  - automation
+maintainers:
+  - name: Raul

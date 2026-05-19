@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: {{ include "n8n.namespace" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.n8n.persistence.size }}
+  {{- if .Values.n8n.persistence.storageClass }}
+  storageClassName: {{ .Values.n8n.persistence.storageClass }}
+  {{- end }}

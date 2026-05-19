@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: {{ include "n8n.namespace" . }}
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.n8n.replicas }}
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        {{- include "n8n.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: n8n
+          image: "{{ .Values.n8n.image.repository }}:{{ .Values.n8n.image.tag }}"
+          imagePullPolicy: {{ .Values.n8n.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.n8n.service.targetPort }}
+          env:
+            - name: N8N_HOST
+              value: {{ .Values.n8n.host | quote }}
+            - name: N8N_PORT
+              value: {{ .Values.n8n.service.targetPort | quote }}
+            - name: N8N_PROTOCOL
+              value: {{ .Values.n8n.protocol | quote }}
+            - name: WEBHOOK_URL
+              value: "{{ .Values.n8n.protocol }}://{{ .Values.n8n.host }}/"
+            - name: GENERIC_TIMEZONE
+              value: {{ .Values.n8n.timezone | quote }}
+            - name: TZ
+              value: {{ .Values.n8n.timezone | quote }}
+            {{- if .Values.n8n.encryptionKey }}
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n
+                  key: N8N_ENCRYPTION_KEY
+            {{- end }}
+            # Postgres
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_HOST
+              value: {{ .Values.postgres.host | quote }}
+            - name: DB_POSTGRESDB_PORT
+              value: {{ .Values.postgres.port | quote }}
+            - name: DB_POSTGRESDB_DATABASE
+              value: {{ .Values.postgres.database | quote }}
+            - name: DB_POSTGRESDB_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.existingSecret | default "n8n" }}
+                  key: {{ if .Values.postgres.existingSecret }}password{{ else }}POSTGRES_PASSWORD{{ end }}
+            {{- if .Values.postgres.ssl.enabled }}
+            - name: DB_POSTGRESDB_SSL_ENABLED
+              value: "true"
+            - name: DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED
+              value: {{ .Values.postgres.ssl.rejectUnauthorized | quote }}
+            {{- end }}
+            {{- if .Values.redis.enabled }}
+            {{- if .Values.redis.queueMode }}
+            - name: EXECUTIONS_MODE
+              value: queue
+            {{- end }}
+            - name: QUEUE_BULL_REDIS_HOST
+              value: {{ .Values.redis.host | quote }}
+            - name: QUEUE_BULL_REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+            - name: QUEUE_BULL_REDIS_DB
+              value: {{ .Values.redis.db | quote }}
+            {{- if or .Values.redis.password .Values.redis.existingSecret }}
+            - name: QUEUE_BULL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default "n8n" }}
+                  key: {{ if .Values.redis.existingSecret }}password{{ else }}REDIS_PASSWORD{{ end }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.n8n.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: n8n-data
+              mountPath: /home/node/.n8n
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.n8n.service.targetPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.n8n.service.targetPort }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.n8n.resources | nindent 12 }}
+      volumes:
+        - name: n8n-data
+          persistentVolumeClaim:
+            claimName: n8n-data

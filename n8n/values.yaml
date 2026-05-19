@@ -1,0 +1,63 @@
+global:
+  namespace: n8n
+
+n8n:
+  image:
+    repository: docker.n8n.io/n8nio/n8n
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicas: 1
+
+  # Generic n8n config
+  host: "n8n.inf.lan"
+  protocol: http
+  port: 5678
+  timezone: Europe/Bucharest
+
+  # Encryption key for credentials. Generate: openssl rand -hex 32
+  # If empty, n8n will autogenerate on first boot (NOT recommended — back this up).
+  encryptionKey: ""
+
+  persistence:
+    size: 5Gi
+    storageClass: ""
+
+  service:
+    port: 80
+    targetPort: 5678
+
+  ingress:
+    enabled: true
+    host: "n8n.inf.lan"
+    entryPoint: web
+
+  resources: {}
+
+  extraEnv: []
+    # - name: N8N_LOG_LEVEL
+    #   value: info
+
+# External Postgres
+postgres:
+  host: "postgres.db.svc.cluster.local"
+  port: 5432
+  database: n8n
+  user: n8n
+  # Provide password inline OR set existingSecret (key: password)
+  password: ""
+  existingSecret: ""
+  ssl:
+    enabled: false
+    rejectUnauthorized: true
+
+# External Redis (used for queue mode / scaling). Set enabled=false for single-instance mode.
+redis:
+  enabled: false
+  host: "redis.cache.svc.cluster.local"
+  port: 6379
+  db: 0
+  password: ""
+  existingSecret: ""
+  # When enabled, n8n switches to queue execution mode
+  queueMode: true

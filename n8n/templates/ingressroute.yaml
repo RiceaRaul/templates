@@ -1,0 +1,16 @@
+{{- if .Values.n8n.ingress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: n8n
+  namespace: {{ include "n8n.namespace" . }}
+spec:
+  entryPoints:
+    - {{ .Values.n8n.ingress.entryPoint }}
+  routes:
+    - match: Host(`{{ .Values.n8n.ingress.host }}`)
+      kind: Rule
+      services:
+        - name: n8n
+          port: {{ .Values.n8n.service.port }}
+{{- end }}
