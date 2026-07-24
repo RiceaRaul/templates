@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kavita
+  namespace: {{ include "kavita.namespace" . }}
+  labels:
+    {{- include "kavita.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.kavita.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kavita
+  template:
+    metadata:
+      labels:
+        {{- include "kavita.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: kavita
+          image: "{{ .Values.kavita.image.repository }}:{{ .Values.kavita.image.tag }}"
+          imagePullPolicy: {{ .Values.kavita.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.kavita.service.targetPort }}
+          env:
+            - name: TZ
+              value: {{ .Values.kavita.timezone | quote }}
+            {{- with .Values.kavita.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /kavita/config
+            {{- range .Values.kavita.media }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              {{- if .readOnly }}
+              readOnly: true
+              {{- end }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.kavita.service.targetPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.kavita.service.targetPort }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.kavita.resources | nindent 12 }}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: kavita-config
+        {{- range .Values.kavita.media }}
+        - name: {{ .name }}
+          {{- if .existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .existingClaim }}
+          {{- else if .hostPath }}
+          hostPath:
+            path: {{ .hostPath }}
+          {{- else if .nfs }}
+          nfs:
+            server: {{ .nfs.server }}
+            path: {{ .nfs.path }}
+          {{- end }}
+        {{- end }}

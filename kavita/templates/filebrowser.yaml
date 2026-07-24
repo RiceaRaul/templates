@@ -1,0 +1,129 @@
+{{- if .Values.filebrowser.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-config
+  namespace: {{ include "kavita.namespace" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.filebrowser.config.size }}
+  {{- if .Values.filebrowser.config.storageClass }}
+  storageClassName: {{ .Values.filebrowser.config.storageClass }}
+  {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser
+  namespace: {{ include "kavita.namespace" . }}
+  labels:
+    app: filebrowser
+    app.kubernetes.io/name: filebrowser
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+        app.kubernetes.io/name: filebrowser
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      # Co-locate with Kavita so shared hostPath media is the same on-disk data.
+      # Harmless with ReadWriteMany PVCs; required for hostPath media.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: kavita
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: filebrowser
+          image: "{{ .Values.filebrowser.image.repository }}:{{ .Values.filebrowser.image.tag }}"
+          imagePullPolicy: {{ .Values.filebrowser.image.pullPolicy }}
+          args:
+            - --database=/database/filebrowser.db
+            - --root=/srv
+          ports:
+            - containerPort: {{ .Values.filebrowser.service.targetPort }}
+          volumeMounts:
+            - name: config
+              mountPath: /database
+            {{- range .Values.kavita.media }}
+            - name: {{ .name }}
+              mountPath: /srv/{{ .name }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.filebrowser.resources | nindent 12 }}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: filebrowser-config
+        {{- range .Values.kavita.media }}
+        - name: {{ .name }}
+          {{- if .existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .existingClaim }}
+          {{- else if .hostPath }}
+          hostPath:
+            path: {{ .hostPath }}
+          {{- else if .nfs }}
+          nfs:
+            server: {{ .nfs.server }}
+            path: {{ .nfs.path }}
+          {{- end }}
+        {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser
+  namespace: {{ include "kavita.namespace" . }}
+  labels:
+    app: filebrowser
+spec:
+  selector:
+    app: filebrowser
+  ports:
+    - protocol: TCP
+      port: {{ .Values.filebrowser.service.port }}
+      targetPort: {{ .Values.filebrowser.service.targetPort }}
+  type: ClusterIP
+{{- if .Values.filebrowser.ingress.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: filebrowser
+  namespace: {{ include "kavita.namespace" . }}
+spec:
+  entryPoints:
+    {{- range .Values.filebrowser.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
+  routes:
+    - match: {{ range $i, $h := .Values.filebrowser.ingress.hosts }}{{ if $i }} || {{ end }}Host(`{{ $h }}`){{ end }}
+      kind: Rule
+      services:
+        - name: filebrowser
+          port: {{ .Values.filebrowser.service.port }}
+  {{- if .Values.filebrowser.ingress.tls.enabled }}
+  tls:
+    {{- if .Values.filebrowser.ingress.tls.secretName }}
+    secretName: {{ .Values.filebrowser.ingress.tls.secretName }}
+    {{- end }}
+    {{- if .Values.filebrowser.ingress.tls.certResolver }}
+    certResolver: {{ .Values.filebrowser.ingress.tls.certResolver }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

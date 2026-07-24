@@ -1,0 +1,87 @@
+global:
+  namespace: kavita
+
+kavita:
+  image:
+    repository: jvmilazz0/kavita
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicas: 1
+
+  timezone: Europe/Bucharest
+
+  # Config volume — MUST mount at /kavita/config (holds db, settings, covers).
+  config:
+    size: 2Gi
+    storageClass: ""
+
+  # Media libraries. Each entry becomes a volumeMount in the container.
+  # Source: existingClaim | hostPath | nfs. Edit paths to point at your media.
+  media:
+    - name: manga
+      mountPath: /manga
+      hostPath: /mnt/media/manga
+      readOnly: true
+    - name: comics
+      mountPath: /comics
+      hostPath: /mnt/media/comics
+      readOnly: true
+    - name: books
+      mountPath: /books
+      hostPath: /mnt/media/books
+      readOnly: true
+
+  service:
+    port: 80
+    targetPort: 5000
+
+  ingress:
+    enabled: true
+    entryPoints:
+      - web
+    hosts:
+      - "kavita.inf.lan"
+      # - "kavita.ricearaul.com"
+    # Optional Traefik TLS
+    tls:
+      enabled: false
+      certResolver: ""
+      secretName: ""
+
+  resources: {}
+
+  extraEnv: []
+
+# Filebrowser — web upload/file manager. Mounts the same media libraries RW so
+# you can upload manga/comics/books; Kavita then scans them (Kavita side stays RO).
+filebrowser:
+  enabled: true
+
+  image:
+    repository: filebrowser/filebrowser
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Stores filebrowser.db (users, settings). Small.
+  config:
+    size: 256Mi
+    storageClass: ""
+
+  service:
+    port: 80
+    targetPort: 80
+
+  ingress:
+    enabled: true
+    entryPoints:
+      - web
+    hosts:
+      - "files.inf.lan"
+      # - "files.ricearaul.com"
+    tls:
+      enabled: false
+      certResolver: ""
+      secretName: ""
+
+  resources: {}

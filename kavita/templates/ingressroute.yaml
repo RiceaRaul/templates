@@ -1,0 +1,27 @@
+{{- if .Values.kavita.ingress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kavita
+  namespace: {{ include "kavita.namespace" . }}
+spec:
+  entryPoints:
+    {{- range .Values.kavita.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
+  routes:
+    - match: {{ range $i, $h := .Values.kavita.ingress.hosts }}{{ if $i }} || {{ end }}Host(`{{ $h }}`){{ end }}
+      kind: Rule
+      services:
+        - name: kavita
+          port: {{ .Values.kavita.service.port }}
+  {{- if .Values.kavita.ingress.tls.enabled }}
+  tls:
+    {{- if .Values.kavita.ingress.tls.secretName }}
+    secretName: {{ .Values.kavita.ingress.tls.secretName }}
+    {{- end }}
+    {{- if .Values.kavita.ingress.tls.certResolver }}
+    certResolver: {{ .Values.kavita.ingress.tls.certResolver }}
+    {{- end }}
+  {{- end }}
+{{- end }}

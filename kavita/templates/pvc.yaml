@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kavita-config
+  namespace: {{ include "kavita.namespace" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.kavita.config.size }}
+  {{- if .Values.kavita.config.storageClass }}
+  storageClassName: {{ .Values.kavita.config.storageClass }}
+  {{- end }}

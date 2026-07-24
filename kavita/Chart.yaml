@@ -1,0 +1,14 @@
+apiVersion: v2
+name: kavita
+description: Kavita self-hosted digital library (manga, comics, books) with Traefik IngressRoute
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - kavita
+  - manga
+  - comics
+  - books
+  - library
+maintainers:
+  - name: Raul
