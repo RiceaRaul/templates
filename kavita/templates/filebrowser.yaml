@@ -37,6 +37,10 @@ spec:
         app.kubernetes.io/name: filebrowser
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- with .Values.filebrowser.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       # Co-locate with Kavita so shared hostPath media is the same on-disk data.
       # Harmless with ReadWriteMany PVCs; required for hostPath media.
       affinity:

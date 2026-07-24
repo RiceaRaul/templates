@@ -63,6 +63,15 @@ filebrowser:
     tag: latest
     pullPolicy: IfNotPresent
 
+  # Runs non-root. This uid/gid MUST own the media dirs so uploads can write.
+  # On each media host dir run once:  chown -R 1000:1000 /mnt/media/*
+  # (fsGroup helps for real PVCs; hostPath ignores it, so the chown is required.)
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+
   # Stores filebrowser.db (users, settings). Small.
   config:
     size: 256Mi
