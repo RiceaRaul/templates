@@ -8,10 +8,10 @@ dockerRegistry:
 
 ingress:
   enabled: true
-  appHost: "plane.inf.lan"
+  appHost: "plane.ricearaul.com"
   # Extra domains that should also route to the app (same routes as appHost).
   extraHosts:
-    - "plane.ricearaul.com"
+    - "plane.inf.lan"
   minioHost: ""
   rabbitmqHost: ""
   # Set to "traefik" (or any value starting with "traefik") to deploy native Traefik IngressRoute CRDs
@@ -60,7 +60,7 @@ ssl:
   #
   # Leave false if you set tls_secret_name or generateCerts -- those already
   # imply https. This is only for TLS this chart cannot see.
-  externalTermination: false
+  externalTermination: true
 
 redis:
   local_setup: true
