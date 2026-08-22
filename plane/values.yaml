@@ -158,6 +158,7 @@ space:
   affinity: {}
 
 admin:
+  image: artifacts.plane.so/makeplane/plane-admin
   replicas: 1
   memoryLimit: 1000Mi
   cpuLimit: 500m
