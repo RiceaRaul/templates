@@ -1,0 +1,48 @@
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-api-migrate-{{ .Release.Revision }}
+  labels:
+    {{- include "plane.commonLabels" $ | nindent 4 }}
+    {{- with .Values.api.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.api.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-api-migrate
+        {{- include "plane.commonLabels" $ | nindent 8 }}
+      annotations:
+        timestamp: {{ now | quote }}
+    spec:
+      containers:
+      - name: {{ .Release.Name }}-api-migrate
+        image: {{ .Values.api.image | default "artifacts.plane.so/makeplane/plane-backend" }}:{{ .Values.planeVersion }}
+        command: 
+          - ./bin/docker-entrypoint-migrator.sh
+        imagePullPolicy: {{ .Values.api.pullPolicy | default "Always" }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-app-vars
+              optional: false
+          - secretRef:
+              name: {{ if not (empty .Values.external_secrets.app_env_existingSecret) }}{{ .Values.external_secrets.app_env_existingSecret }}{{ else }}{{ .Release.Name }}-app-secrets{{ end }}
+              optional: false
+          - secretRef:
+              name:  {{ if not (empty .Values.external_secrets.doc_store_existingSecret) }}{{ .Values.external_secrets.doc_store_existingSecret }}{{ else }}{{ .Release.Name }}-doc-store-secrets{{ end }}
+              optional: false
+      restartPolicy: OnFailure
+      serviceAccount: {{ .Release.Name }}-srv-account
+      serviceAccountName: {{ .Release.Name }}-srv-account
+      {{- include "plane.podScheduling" .Values.api }}
+---
