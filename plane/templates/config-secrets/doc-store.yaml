@@ -16,7 +16,11 @@ stringData:
   MINIO_ROOT_PASSWORD: {{ .Values.minio.root_password | default "password" | quote}}
   AWS_ACCESS_KEY_ID: {{ .Values.minio.root_user | default "admin" | quote }}
   AWS_SECRET_ACCESS_KEY: {{ .Values.minio.root_password | default "password" | quote  }}
-  AWS_S3_ENDPOINT_URL: http://{{ .Release.Name }}-minio:9000
+  {{- if .Values.ingress.appHost }}
+  AWS_S3_ENDPOINT_URL: {{ printf "%s://%s" (eq (include "plane.tlsEnabled" .) "true" | ternary "https" "http") .Values.ingress.appHost | quote }}
+  {{- else }}
+  AWS_S3_ENDPOINT_URL: "http://{{ .Release.Name }}-minio:9000"
+  {{- end }}
   {{- else }}
   USE_MINIO: "0"
   AWS_ACCESS_KEY_ID: {{ .Values.env.aws_access_key | default "" | quote }}
