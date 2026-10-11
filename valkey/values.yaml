@@ -1,0 +1,40 @@
+global:
+  namespace: cache
+
+# Reachable in-cluster at valkey.<namespace>.svc.cluster.local:<service.port>
+# (default: valkey.cache.svc.cluster.local:6379). No ingress: Valkey is TCP and internal only.
+# Wire-compatible with Redis: clients keep using the redis:// URL scheme.
+valkey:
+  image:
+    repository: docker.io/valkey/valkey
+    tag: 9.1-alpine
+    pullPolicy: IfNotPresent
+
+  # Empty = no auth: every pod in the cluster can read and write.
+  # Clients then connect with redis://:<password>@valkey.cache.svc.cluster.local:6379/<db>
+  password: ""
+  # Use an existing Secret instead (key: password). Takes precedence over password above.
+  existingSecret: ""
+
+  # AOF persistence. Keep on when Valkey backs queues (Celery, BullMQ) so jobs survive restarts.
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+
+  # Empty = unlimited. Do not pair a limit with an evicting policy for queue workloads.
+  maxmemory: ""
+  maxmemoryPolicy: noeviction
+
+  # Extra valkey-server arguments, e.g. ["--databases", "32"]
+  extraArgs: []
+
+  service:
+    port: 6379
+
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      memory: 256Mi

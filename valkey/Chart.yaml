@@ -1,0 +1,13 @@
+apiVersion: v2
+name: valkey
+description: Standalone Valkey (Redis-compatible) shared by in-cluster apps (cache, queues, Celery broker)
+type: application
+version: 0.1.0
+appVersion: "9.1"
+keywords:
+  - valkey
+  - redis
+  - cache
+  - queue
+maintainers:
+  - name: Raul

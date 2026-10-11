@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey
+  namespace: {{ include "valkey.namespace" . }}
+  labels:
+    {{- include "valkey.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # RWO volume — never run two pods against it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: valkey
+  template:
+    metadata:
+      labels:
+        {{- include "valkey.labels" . | nindent 8 }}
+      {{- if and .Values.valkey.password (not .Values.valkey.existingSecret) }}
+      annotations:
+        checksum/secret: {{ .Values.valkey.password | sha256sum }}
+      {{- end }}
+    spec:
+      containers:
+        - name: valkey
+          image: "{{ .Values.valkey.image.repository }}:{{ .Values.valkey.image.tag }}"
+          imagePullPolicy: {{ .Values.valkey.image.pullPolicy }}
+          args:
+            - --dir
+            - /data
+            - --appendonly
+            - {{ ternary "yes" "no" .Values.valkey.persistence.enabled | quote }}
+            {{- if include "valkey.authEnabled" . }}
+            - --requirepass
+            - $(VALKEY_PASSWORD)
+            {{- end }}
+            {{- if .Values.valkey.maxmemory }}
+            - --maxmemory
+            - {{ .Values.valkey.maxmemory | quote }}
+            - --maxmemory-policy
+            - {{ .Values.valkey.maxmemoryPolicy | quote }}
+            {{- end }}
+            {{- range .Values.valkey.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - containerPort: 6379
+          {{- if include "valkey.authEnabled" . }}
+          env:
+            - name: VALKEY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.valkey.existingSecret | default "valkey" }}
+                  key: password
+            # Lets valkey-cli in the probes authenticate.
+            - name: VALKEYCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.valkey.existingSecret | default "valkey" }}
+                  key: password
+          {{- end }}
+          volumeMounts:
+            - name: valkey-data
+              mountPath: /data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "valkey-cli ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "valkey-cli ping | grep -q PONG"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.valkey.resources | nindent 12 }}
+      volumes:
+        - name: valkey-data
+          {{- if .Values.valkey.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: valkey-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
