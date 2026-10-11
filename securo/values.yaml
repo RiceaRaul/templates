@@ -218,8 +218,8 @@ ingressRoute:
   enabled: true
   entryPoints:
     - web
-  extraHosts: []
-    # - "securo.ricearaul.com"
+  extraHosts:
+    - "securo.ricearaul.com"
   # Optional Traefik TLS (also set global.tls: true so generated URLs use https)
   tls:
     enabled: false
