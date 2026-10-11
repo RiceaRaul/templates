@@ -1,0 +1,27 @@
+{{- if .Values.zot.ingress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zot
+  namespace: {{ include "zot.namespace" . }}
+spec:
+  entryPoints:
+    {{- range .Values.zot.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
+  routes:
+    - match: {{ range $i, $h := .Values.zot.ingress.hosts }}{{ if $i }} || {{ end }}Host(`{{ $h }}`){{ end }}
+      kind: Rule
+      services:
+        - name: zot
+          port: {{ .Values.zot.service.port }}
+  {{- if .Values.zot.ingress.tls.enabled }}
+  tls:
+    {{- if .Values.zot.ingress.tls.secretName }}
+    secretName: {{ .Values.zot.ingress.tls.secretName }}
+    {{- end }}
+    {{- if .Values.zot.ingress.tls.certResolver }}
+    certResolver: {{ .Values.zot.ingress.tls.certResolver }}
+    {{- end }}
+  {{- end }}
+{{- end }}

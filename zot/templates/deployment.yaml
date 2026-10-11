@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zot
+  namespace: {{ include "zot.namespace" . }}
+  labels:
+    {{- include "zot.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # RWO volume — never run two pods against it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: zot
+  template:
+    metadata:
+      labels:
+        {{- include "zot.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include "zot.config" . | sha256sum }}
+        {{- if and .Values.zot.auth.enabled (not .Values.zot.auth.existingSecret) }}
+        checksum/htpasswd: {{ .Values.zot.auth.htpasswd | sha256sum }}
+        {{- end }}
+    spec:
+      containers:
+        - name: zot
+          image: "{{ .Values.zot.image.repository }}:{{ .Values.zot.image.tag }}"
+          imagePullPolicy: {{ .Values.zot.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.zot.service.targetPort }}
+          volumeMounts:
+            - name: zot-data
+              mountPath: /var/lib/zot
+            - name: zot-config
+              mountPath: /etc/zot/config.json
+              subPath: config.json
+            {{- if .Values.zot.auth.enabled }}
+            - name: zot-htpasswd
+              mountPath: /etc/zot/htpasswd
+              subPath: htpasswd
+            {{- end }}
+          startupProbe:
+            httpGet:
+              path: /startupz
+              port: {{ .Values.zot.service.targetPort }}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: {{ .Values.zot.service.targetPort }}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: {{ .Values.zot.service.targetPort }}
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.zot.resources | nindent 12 }}
+      volumes:
+        - name: zot-data
+          persistentVolumeClaim:
+            claimName: zot-data
+        - name: zot-config
+          configMap:
+            name: zot-config
+        {{- if .Values.zot.auth.enabled }}
+        - name: zot-htpasswd
+          secret:
+            secretName: {{ include "zot.htpasswdSecretName" . }}
+        {{- end }}

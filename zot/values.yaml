@@ -1,0 +1,90 @@
+global:
+  namespace: registry
+
+zot:
+  image:
+    # Multi-arch image with all extensions (UI, search, sync, scrub).
+    repository: ghcr.io/project-zot/zot
+    tag: v2.1.22
+    pullPolicy: IfNotPresent
+
+  logLevel: info
+
+  # Public URL of the registry, e.g. "https://registry.ricearaul.com".
+  # Set when TLS is terminated in front of Zot so the UI builds correct links.
+  externalUrl: ""
+
+  storage:
+    gc: true
+    gcDelay: 1h
+    gcInterval: 6h
+    dedupe: true
+
+  persistence:
+    size: 20Gi
+    storageClass: ""
+
+  auth:
+    # false = NO auth and NO access control: anyone who reaches the registry can push/delete.
+    enabled: true
+    # htpasswd file content (bcrypt only). Generate a line with:
+    #   htpasswd -nbB raul 'parola'
+    htpasswd: ""
+    # htpasswd: |
+    #   raul:$2y$05$...
+    # Use an existing Secret instead (key: htpasswd). Takes precedence over htpasswd above.
+    existingSecret: ""
+    # Users with full access (read, create, update, delete) on all repositories.
+    adminUsers:
+      - raul
+    # Actions for any other authenticated user, e.g. ["read"].
+    defaultPolicy: []
+    # Allow unauthenticated pull (read) on all repositories.
+    anonymousPull: false
+
+  extensions:
+    ui: true
+    # UI depends on search — keep both on or both off.
+    search: true
+    # Trivy CVE scanning (needs search). Costs extra RAM and disk — raise resources.limits.memory.
+    cve:
+      enabled: false
+      updateInterval: 24h
+    scrub: false
+
+  # Deep-merged over the generated config.json, for anything not exposed above
+  # (sync/mirror, LDAP, OIDC, retention...).
+  configOverrides: {}
+    # extensions:
+    #   sync:
+    #     enable: true
+    #     registries:
+    #       - urls: ["https://registry-1.docker.io"]
+    #         onDemand: true
+    #         content:
+    #           - prefix: "**"
+    #             destination: "/docker.io"
+
+  service:
+    port: 5000
+    targetPort: 5000
+
+  ingress:
+    enabled: true
+    entryPoints:
+      - web
+    hosts:
+      - "registry.inf.lan"
+      # - "registry.ricearaul.com"
+    # Optional Traefik TLS
+    tls:
+      enabled: false
+      certResolver: ""
+      secretName: ""
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi

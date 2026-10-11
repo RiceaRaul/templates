@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zot-config
+  namespace: {{ include "zot.namespace" . }}
+  labels:
+    {{- include "zot.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {{- include "zot.config" . | nindent 4 }}

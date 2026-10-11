@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zot
+  namespace: {{ include "zot.namespace" . }}
+  labels:
+    {{- include "zot.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: zot
+  ports:
+    - protocol: TCP
+      port: {{ .Values.zot.service.port }}
+      targetPort: {{ .Values.zot.service.targetPort }}
+  type: ClusterIP

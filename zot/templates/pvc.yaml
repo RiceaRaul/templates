@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zot-data
+  namespace: {{ include "zot.namespace" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.zot.persistence.size }}
+  {{- if .Values.zot.persistence.storageClass }}
+  storageClassName: {{ .Values.zot.persistence.storageClass }}
+  {{- end }}

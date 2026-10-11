@@ -1,0 +1,14 @@
+apiVersion: v2
+name: zot
+description: Zot OCI registry (Docker images + Helm charts) with web UI and Traefik IngressRoute
+type: application
+version: 0.1.0
+appVersion: "v2.1.22"
+keywords:
+  - zot
+  - registry
+  - oci
+  - docker
+  - helm
+maintainers:
+  - name: Raul
