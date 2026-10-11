@@ -45,6 +45,10 @@ spec:
                 {{- else }}
                 name: {{ include "securo.fullname" . }}-secrets
                 {{- end }}
+            {{- range .Values.global.extraSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
           {{- if .Values.backend.resources }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}

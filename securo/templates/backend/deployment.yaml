@@ -57,6 +57,10 @@ spec:
                 {{- else }}
                 name: {{ include "securo.fullname" . }}-secrets
                 {{- end }}
+            {{- range .Values.global.extraSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
           volumeMounts:
             {{- if .Values.persistence.attachments.enabled }}
             - name: attachments

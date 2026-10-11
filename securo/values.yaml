@@ -11,6 +11,15 @@ global:
   # For production, we recommend passing existingSecret instead of creating one via Helm values
   # existingSecret: "securo-secrets"
 
+  # Extra pre-created Secrets loaded as env vars next to the main one (keys are the env var names).
+  # Used for credentials that must stay out of Git, e.g. Enable Banking:
+  #   kubectl -n <namespace> create secret generic securo-enable-banking \
+  #     --from-literal=ENABLE_BANKING_APP_ID=<application id> \
+  #     --from-file=ENABLE_BANKING_PRIVATE_KEY=<path to the downloaded .pem>
+  # Every listed Secret must exist before the pods start.
+  extraSecrets:
+    - securo-enable-banking
+
 # If existingSecret is NOT set, this secret will be created with the values below
 secret:
   # MUST change in production
@@ -26,7 +35,8 @@ secret:
   pluggyClientId: ""
   pluggyClientSecret: ""
 
-  # Enable Banking
+  # Enable Banking: the provider registers only when both values are set.
+  # Left empty here: they come from the securo-enable-banking Secret (see global.extraSecrets).
   enableBankingAppId: ""
   enableBankingPrivateKey: "" # Content of the PEM file
 
@@ -51,8 +61,10 @@ config:
   # Leave empty to auto-compute from global.domain (e.g. http://securo.local/oauth/callback)
   pluggyOauthRedirectUri: ""
   enableBankingApiUrl: "https://api.enablebanking.com"
-  # Leave empty to auto-compute from global.domain
-  enableBankingOauthRedirectUri: ""
+  # Must match a redirect URL registered in the Enable Banking application, and Enable Banking
+  # wants HTTPS, so this points at the public host instead of the http://securo.inf.lan default.
+  # Start the bank connection from this same host, or the callback lands without a session.
+  enableBankingOauthRedirectUri: "https://securo.ricearaul.com/oauth/callback"
   simplefinEnabled: "false"
   simplefinApiUrl: "https://beta-bridge.simplefin.org"
   oidcEnabled: "false"
