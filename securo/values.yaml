@@ -111,7 +111,7 @@ backend:
   replicaCount: 1
   image:
     repository: registry.inf.lan/securo/securo-backend
-    tag: 0.16.3-4ad5156
+    tag: 0.16.3-d57e331
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -130,7 +130,7 @@ frontend:
   replicaCount: 1
   image:
     repository: registry.inf.lan/securo/securo-frontend
-    tag: 0.16.3-4ad5156
+    tag: 0.16.3-d57e331
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
