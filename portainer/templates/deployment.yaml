@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portainer
+  namespace: {{ include "portainer.namespace" . }}
+  labels:
+    {{- include "portainer.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # RWO volume — never run two pods against it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: portainer
+  template:
+    metadata:
+      labels:
+        {{- include "portainer.labels" . | nindent 8 }}
+    spec:
+      {{- if .Values.portainer.clusterAdmin }}
+      serviceAccountName: portainer
+      {{- end }}
+      containers:
+        - name: portainer
+          image: "{{ .Values.portainer.image.repository }}:{{ .Values.portainer.image.tag }}"
+          imagePullPolicy: {{ .Values.portainer.image.pullPolicy }}
+          args:
+            - --bind=:{{ .Values.portainer.service.targetPort }}
+            {{- if include "portainer.adminSecretName" . }}
+            - --admin-password-file=/run/portainer/admin-password
+            {{- end }}
+            {{- if .Values.portainer.trustedOrigins }}
+            - --trusted-origins={{ join "," .Values.portainer.trustedOrigins }}
+            {{- end }}
+            {{- range .Values.portainer.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.portainer.service.targetPort }}
+          volumeMounts:
+            - name: portainer-data
+              mountPath: /data
+            {{- if include "portainer.adminSecretName" . }}
+            - name: admin-password
+              mountPath: /run/portainer/admin-password
+              subPath: password
+              readOnly: true
+            {{- end }}
+          startupProbe:
+            httpGet:
+              path: /api/system/status
+              port: {{ .Values.portainer.service.targetPort }}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/system/status
+              port: {{ .Values.portainer.service.targetPort }}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/system/status
+              port: {{ .Values.portainer.service.targetPort }}
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.portainer.resources | nindent 12 }}
+      volumes:
+        - name: portainer-data
+          persistentVolumeClaim:
+            claimName: portainer-data
+        {{- if include "portainer.adminSecretName" . }}
+        - name: admin-password
+          secret:
+            secretName: {{ include "portainer.adminSecretName" . }}
+        {{- end }}

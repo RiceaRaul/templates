@@ -1,0 +1,62 @@
+global:
+  namespace: portainer
+
+portainer:
+  image:
+    repository: docker.io/portainer/portainer-ce
+    # LTS release.
+    tag: 2.45.2
+    pullPolicy: IfNotPresent
+
+  # Binds the Portainer ServiceAccount to cluster-admin so the UI can manage everything in this
+  # cluster, including reading and editing every Secret. Anyone who logs in as a Portainer admin
+  # gets that power: keep the UI on the LAN host only.
+  # false = no ServiceAccount: Portainer starts without a local environment.
+  clusterAdmin: true
+
+  # Initial admin user (name: admin). Read only on first start, while /data is empty;
+  # change the password from the UI afterwards.
+  # Both empty = no kubectl needed: open the UI and create the admin user within 5 minutes of
+  # the first start. After that Portainer locks itself until the pod is restarted:
+  #   kubectl -n portainer rollout restart deploy/portainer
+  adminPassword:
+    # Plain text, min 12 chars. The chart stores it in the portainer-admin Secret.
+    # Keep it out of Git: --set-string portainer.adminPassword.password='<parola>'
+    password: ""
+    # Use an existing Secret instead (key: password). Takes precedence over password above.
+    existingSecret: ""
+
+  # Hosts allowed by the CSRF origin check, without scheme, e.g. ["portainer.ricearaul.com"].
+  # Needed when TLS is terminated in front of Portainer and the UI answers "origin invalid".
+  trustedOrigins: []
+
+  # Extra portainer arguments, e.g. ["--log-level=DEBUG"]
+  extraArgs: []
+
+  # Holds the Portainer database (users, settings, registries). Not the cluster state.
+  persistence:
+    size: 2Gi
+    storageClass: ""
+
+  service:
+    port: 9000
+    targetPort: 9000
+
+  ingress:
+    enabled: true
+    entryPoints:
+      - web
+    hosts:
+      - "portainer.inf.lan"
+    # Optional Traefik TLS
+    tls:
+      enabled: false
+      certResolver: ""
+      secretName: ""
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi

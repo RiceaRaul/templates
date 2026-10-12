@@ -1,0 +1,27 @@
+{{- if .Values.portainer.ingress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: portainer
+  namespace: {{ include "portainer.namespace" . }}
+spec:
+  entryPoints:
+    {{- range .Values.portainer.ingress.entryPoints }}
+    - {{ . }}
+    {{- end }}
+  routes:
+    - match: {{ range $i, $h := .Values.portainer.ingress.hosts }}{{ if $i }} || {{ end }}Host(`{{ $h }}`){{ end }}
+      kind: Rule
+      services:
+        - name: portainer
+          port: {{ .Values.portainer.service.port }}
+  {{- if .Values.portainer.ingress.tls.enabled }}
+  tls:
+    {{- if .Values.portainer.ingress.tls.secretName }}
+    secretName: {{ .Values.portainer.ingress.tls.secretName }}
+    {{- end }}
+    {{- if .Values.portainer.ingress.tls.certResolver }}
+    certResolver: {{ .Values.portainer.ingress.tls.certResolver }}
+    {{- end }}
+  {{- end }}
+{{- end }}

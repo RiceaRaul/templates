@@ -1,0 +1,13 @@
+apiVersion: v2
+name: portainer
+description: Portainer CE web UI for managing the Kubernetes cluster (workloads, Secrets, ConfigMaps) with Traefik IngressRoute
+type: application
+version: 0.1.0
+appVersion: "2.45.2"
+keywords:
+  - portainer
+  - kubernetes
+  - management
+  - ui
+maintainers:
+  - name: Raul
